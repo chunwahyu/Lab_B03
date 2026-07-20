@@ -43,7 +43,7 @@ public class PersonDataMapper {
         return getAllPeopleResponseData;
     }
 
-    public List<GetAllPeopleResponseData> toGetAllPeopleResponseDataList(List<PersonEntity> personEntityList){
+    public List<GetAllPeopleResponseData> toGetAllPeopleResponseDataList(Iterable<PersonEntity> personEntityList){
         List<GetAllPeopleResponseData> getAllPeopleResponseDataList = new ArrayList<>();
 
         for(PersonEntity personEntity: personEntityList) {

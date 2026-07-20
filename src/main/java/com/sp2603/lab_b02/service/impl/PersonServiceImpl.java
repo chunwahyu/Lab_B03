@@ -9,6 +9,7 @@ import com.sp2603.lab_b02.data.person.entity.PersonEntity;
 import com.sp2603.lab_b02.exception.person.PersonNotFoundException;
 import com.sp2603.lab_b02.mapper.person.PersonDataMapper;
 import com.sp2603.lab_b02.mapper.person.PersonEntityMapper;
+import com.sp2603.lab_b02.repository.PersonRepository;
 import com.sp2603.lab_b02.service.PersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,20 +17,23 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PersonServiceImpl implements PersonService {
 
     private final Logger log = LoggerFactory.getLogger(PersonServiceImpl.class);
+    private final PersonRepository personRepository;
 
-    private List<PersonEntity> personEntityList = new ArrayList<>();
+    //private List<PersonEntity> personEntityList = new ArrayList<>();
     private final PersonEntityMapper personEntityMapper;
     private final PersonDataMapper personDataMapper;
 
     //Constructor injection
-    public PersonServiceImpl(PersonEntityMapper personEntityMapper, PersonDataMapper personDataMapper) {
+    public PersonServiceImpl(PersonEntityMapper personEntityMapper, PersonDataMapper personDataMapper, PersonRepository personRepository) {
         this.personEntityMapper = personEntityMapper;
         this.personDataMapper = personDataMapper;
+        this.personRepository = personRepository;
     }
 
     @Override
@@ -46,7 +50,8 @@ public class PersonServiceImpl implements PersonService {
 
         PersonEntity personEntity = personEntityMapper.toPersonEntity(createPersonRequestData);
 
-        personEntityList.add(personEntity);
+        //personEntityList.add(personEntity);
+        personRepository.save(personEntity);
 
         CreatePersonResponseData createPersonResponseData = personDataMapper.toCreatePersonResponseData(personEntity);
 
@@ -55,11 +60,11 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public List<GetAllPeopleResponseData> getAllPeopleResponseDataList() {
+        Iterable<PersonEntity> personEntityList = personRepository.findAll();
         List<GetAllPeopleResponseData> getAllPeopleResponseDataList = personDataMapper.toGetAllPeopleResponseDataList(personEntityList);
 
         return getAllPeopleResponseDataList;
     }
-
 
     @Override
     public PersonResponseData updatePerson(UpdatePersonRequestData updatePersonRequestData) {
@@ -96,6 +101,9 @@ public class PersonServiceImpl implements PersonService {
             PersonEntity personEntity = getEntityByHkid(updatePersonRequestData.getHkid());
             personEntity.setFirstName(updatePersonRequestData.getFirstName());
             personEntity.setLastName(updatePersonRequestData.getLastName());
+
+            personEntity = personRepository.save(personEntity);
+
             PersonResponseData personResponseData = personDataMapper.toPersonResponseData(personEntity);
             return personResponseData;
 
@@ -119,7 +127,8 @@ public class PersonServiceImpl implements PersonService {
             throw new PersonNotFoundException(hkid);
             **/
             PersonEntity personEntity = getEntityByHkid(hkid);
-            personEntityList.remove(personEntity);
+//            personEntityList.remove(personEntity);
+            personRepository.delete(personEntity);
             PersonResponseData personResponseData = personDataMapper.toPersonResponseData(personEntity);
 
             return personResponseData;
@@ -134,7 +143,7 @@ public class PersonServiceImpl implements PersonService {
     public List<PersonResponseData> getByLastName(String lastName) {
         List<PersonResponseData> resultList = new ArrayList<>();
 
-        for(PersonEntity personEntity: personEntityList) {
+        for(PersonEntity personEntity: personRepository.findAllByLastName(lastName)) {
             if(personEntity.getLastName().equals(lastName)) {
                 PersonResponseData personResponseData = personDataMapper.toPersonResponseData(personEntity);
                 resultList.add(personResponseData);
@@ -146,12 +155,20 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public PersonEntity getEntityByHkid(String hkid) {
-        for(PersonEntity personEntity: personEntityList) {
-            if(personEntity.getHkid().equals(hkid)) {
-                return personEntity;
-            }
+//        for(PersonEntity personEntity: personEntityList) {
+//            if(personEntity.getHkid().equals(hkid)) {
+//                return personEntity;
+//            }
+//        }
+//
+//        throw new PersonNotFoundException(hkid);
+
+        Optional<PersonEntity> optionalPersonEntity = personRepository.findByHkid(hkid);
+        if(optionalPersonEntity.isEmpty()) {
+            throw new PersonNotFoundException(hkid);
         }
 
-        throw new PersonNotFoundException(hkid);
+        PersonEntity personEntity = optionalPersonEntity.get();
+        return personEntity;
     }
 }
