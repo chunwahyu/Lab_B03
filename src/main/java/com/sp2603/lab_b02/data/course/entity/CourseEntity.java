@@ -1,15 +1,34 @@
 package com.sp2603.lab_b02.data.course.entity;
 
 import com.sp2603.lab_b02.data.person.entity.PersonEntity;
+import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "course")
 public class CourseEntity {
+    @Id
+    @Column(length = 8, nullable = false)
     private String courseId;
+
+    @Column(nullable = false)
     private String courseName;
+
+    @Column(nullable = false)
     private Double price;
+
+    @ManyToOne
+    @JoinColumn(name = "teacher_pid")
     private PersonEntity teacher;
+
+    @ManyToMany
+    @JoinTable(
+            name = "student_course",
+            joinColumns = @JoinColumn(name = "course_pid"),
+            inverseJoinColumns = @JoinColumn(name = "student_id")
+    )
     private List<PersonEntity> students = new ArrayList<>();
 
     public String getCourseId() {

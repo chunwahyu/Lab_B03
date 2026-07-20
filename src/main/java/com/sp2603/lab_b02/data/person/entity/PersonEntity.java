@@ -1,7 +1,10 @@
 package com.sp2603.lab_b02.data.person.entity;
 
+import com.sp2603.lab_b02.data.course.entity.CourseEntity;
 import jakarta.persistence.*;
 import org.jspecify.annotations.Nullable;
+
+import java.util.List;
 
 @Entity
 @Table(name = "person")
@@ -18,6 +21,12 @@ public class PersonEntity {
 
     @Column(nullable = false, unique = true)
     private String hkid;
+
+    @OneToMany(mappedBy = "teacher")
+    private List<CourseEntity> courseTeaching;
+
+    @ManyToMany(mappedBy = "students")
+    private List<CourseEntity> courseJoining;
 
     public @Nullable Integer getPid() {
         return pid;
