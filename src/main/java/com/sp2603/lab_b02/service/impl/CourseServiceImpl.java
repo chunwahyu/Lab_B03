@@ -8,14 +8,17 @@ import com.sp2603.lab_b02.data.person.entity.PersonEntity;
 import com.sp2603.lab_b02.exception.course.*;
 import com.sp2603.lab_b02.mapper.course.CourseDataMapper;
 import com.sp2603.lab_b02.mapper.course.CourseEntityMapper;
+import com.sp2603.lab_b02.repository.CourseRepository;
 import com.sp2603.lab_b02.service.CourseService;
 import com.sp2603.lab_b02.service.PersonService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -23,12 +26,14 @@ public class CourseServiceImpl implements CourseService {
     private final PersonService personService;
     private final CourseEntityMapper courseEntityMapper;
     private final CourseDataMapper courseDataMapper;
-    private List<CourseEntity> courseEntityList = new ArrayList<>();
+    private final CourseRepository courseRepository;
+    //private List<CourseEntity> courseEntityList = new ArrayList<>();
 
-    public CourseServiceImpl(PersonService personService, CourseEntityMapper courseEntityMapper, CourseDataMapper courseDataMapper) {
+    public CourseServiceImpl(PersonService personService, CourseEntityMapper courseEntityMapper, CourseDataMapper courseDataMapper, CourseRepository courseRepository) {
         this.personService = personService;
         this.courseEntityMapper = courseEntityMapper;
         this.courseDataMapper = courseDataMapper;
+        this.courseRepository = courseRepository;
     }
 
     @Override
@@ -48,14 +53,22 @@ public class CourseServiceImpl implements CourseService {
             return courseResponseData;
              **/
 
-            CourseEntity courseEntity = courseEntityMapper.toCourseEntity(
-                    createCourseRequestData,
-                    personService.getEntityByHkid(createCourseRequestData.getTeacherHkid())
-                    );
+//            CourseEntity courseEntity = courseEntityMapper.toCourseEntity(
+//                    createCourseRequestData,
+//                    personService.getEntityByHkid(createCourseRequestData.getTeacherHkid())
+//                    );
 
-            courseEntityList.add(courseEntity);
+            //courseEntityList.add(courseEntity);
+            //courseEntity = courseRepository.save(courseEntity);
 
-            return courseDataMapper.toCourseResponseData(courseEntity);
+            return courseDataMapper.toCourseResponseData(
+                    courseRepository.save(
+                            courseEntityMapper.toCourseEntity(
+                                createCourseRequestData,
+                                personService.getEntityByHkid(createCourseRequestData.getTeacherHkid())
+                            )
+                    )
+            );
 
         } catch(Exception exception) {
             log.warn("Create Course Failed: {}", exception.getMessage());
@@ -69,7 +82,8 @@ public class CourseServiceImpl implements CourseService {
         List<CourseResponseData> courseResponseDataList = courseDataMapper.toCourseResponseDataList(courseEntityList);
         return courseResponseDataList;
          **/
-        return courseDataMapper.toCourseResponseDataList(courseEntityList);
+
+        return courseDataMapper.toCourseResponseDataList(courseRepository.findAll());
     }
 
     @Override
@@ -95,7 +109,7 @@ public class CourseServiceImpl implements CourseService {
                     personService.getEntityByHkid(updateCourseRequestData.getTeacherHkid())
                     );
 
-            return courseDataMapper.toCourseResponseData(courseEntity);
+            return courseDataMapper.toCourseResponseData(courseRepository.save(courseEntity));
 
         } catch (Exception exception) {
             log.warn("Update Course Failed: {}", exception.getMessage());
@@ -104,10 +118,12 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    @Transactional
     public CourseResponseData deleteCourse(String courseId) {
         try {
             CourseEntity courseEntity = getEntityByCourseId(courseId);
-            courseEntityList.remove(courseEntity);
+            //courseEntityList.remove(courseEntity);
+            courseRepository.delete(courseEntity);
             return courseDataMapper.toCourseResponseData(courseEntity);
         } catch(Exception exception) {
             log.warn("Delete Course Failed: {}", exception.getMessage());
@@ -179,20 +195,27 @@ public class CourseServiceImpl implements CourseService {
     }
 
     public boolean isCourseExist(String courseId) {
-        for(CourseEntity courseEntity: courseEntityList) {
-            if(courseEntity.getCourseId().equals(courseId)) {
-                return true;
-            }
-        }
-        return false;
+//        for(CourseEntity courseEntity: courseRepository.findAll()) {
+//            if(courseEntity.getCourseId().equals(courseId)) {
+//                return true;
+//            }
+//        }
+//        return false;
+        return courseRepository.existsById(courseId);
     }
 
     public CourseEntity getEntityByCourseId(String courseId) {
-        for(CourseEntity courseEntity:courseEntityList) {
-            if(courseEntity.getCourseId().equals(courseId)) {
-                return courseEntity;
-            }
-        }
-        throw new CourseNotFoundException(courseId);
+//        for(CourseEntity courseEntity:courseEntityList) {
+//            if(courseEntity.getCourseId().equals(courseId)) {
+//                return courseEntity;
+//            }
+//        }
+//        throw new CourseNotFoundException(courseId);
+
+        //return courseEntity;
+
+        return courseRepository.findById(courseId).orElseThrow(
+                () -> new CourseNotFoundException(courseId)
+        );
     }
 }

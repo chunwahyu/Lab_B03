@@ -59,4 +59,20 @@ public class PersonEntity {
     public void setHkid(String hkid) {
         this.hkid = hkid;
     }
+
+    public List<CourseEntity> getCourseTeaching() {
+        return courseTeaching;
+    }
+
+    public void setCourseTeaching(List<CourseEntity> courseTeaching) {
+        this.courseTeaching = courseTeaching;
+    }
+
+    public List<CourseEntity> getCourseJoining() {
+        return courseJoining;
+    }
+
+    public void setCourseJoining(List<CourseEntity> courseJoining) {
+        this.courseJoining = courseJoining;
+    }
 }

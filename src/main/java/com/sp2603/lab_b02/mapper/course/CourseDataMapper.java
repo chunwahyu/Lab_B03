@@ -54,7 +54,7 @@ public class CourseDataMapper {
         return courseResponseData;
     }
 
-    public List<CourseResponseData> toCourseResponseDataList(List<CourseEntity> courseEntityList) {
+    public List<CourseResponseData> toCourseResponseDataList(Iterable<CourseEntity> courseEntityList) {
         List<CourseResponseData> courseResponseDataList = new ArrayList<>();
         for(CourseEntity courseEntity : courseEntityList) {
             courseResponseDataList.add(toCourseResponseData(courseEntity));
